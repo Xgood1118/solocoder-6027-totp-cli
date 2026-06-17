@@ -1,0 +1,102 @@
+version: "2"
+
+run:
+  go: "1.24"
+  issues-exit-code: 1
+  tests: false
+  allow-parallel-runners: true
+
+linters:
+  default: all
+  disable:
+    - exhaustruct
+    - gomodguard
+    - nakedret
+    - wsl
+
+  settings:
+    cyclop:
+      max-complexity: 15
+    depguard:
+      rules:
+        main:
+          allow:
+            - $gostd
+            - filippo.io/age
+            - github.com/kardianos/osext
+            - github.com/urfave/cli/v2
+            - github.com/yitsushi/github-release-check
+            - github.com/yitsushi/totp-cli
+            - golang.org/x/term
+            - gopkg.in/yaml.v3
+    govet:
+      enable-all: true
+    misspell:
+      locale: US
+    nolintlint:
+      require-explanation: true
+      require-specific: false
+      allow-unused: false
+    varnamelen:
+      ignore-names:
+        - ns
+        - err
+        - iv
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+  exclusions:
+    generated: strict
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - dupl
+          - err113
+          - errcheck
+          - funlen
+          - gocyclo
+          - gosec
+          - scopelint
+          - testpackage
+          - varnamelen
+        path: _test\.go
+      - linters:
+          - forbidigo
+        path: internal/cmd/
+      - linters:
+          - wrapcheck
+        text: 'sig: func github.com/yitsushi/totp-cli/'
+      - linters:
+          - wrapcheck
+        text: 'sig: func \(\*?github.com/yitsushi/totp-cli/'
+      - linters:
+          - gochecknoglobals
+        path: internal/info
+      - linters:
+          - godox
+        source: '// .* #\d+'
+      - linters:
+          - cyclop
+        path: (.+)_test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: strict
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
