@@ -1,0 +1,1 @@
+dump backup --output 指定路径后执行直接报 Required flag "output" not set，dump 命令的 --output 和 backup 子命令的 --output 同名冲突，backup 的 output 参数完全收不到，age 加密备份功能不可用。检查修复一下。
