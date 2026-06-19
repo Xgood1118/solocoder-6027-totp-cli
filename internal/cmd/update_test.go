@@ -23,7 +23,7 @@ func (suite *UpdateTestSuite) TestUpdateAlgorithm() {
 	}
 	stor := newFakeStorage(ns)
 
-	err := executeUpdate(stor, "myns", "github", AccountOptions{Algorithm: "sha256"}, []string{"algorithm"})
+	err := executeUpdate(stor, "myns", "github", AccountOptions{Algorithm: "sha256"}, []string{"algorithm"}, false, false)
 
 	suite.Require().NoError(err)
 	suite.True(stor.SaveCalled)
@@ -39,7 +39,7 @@ func (suite *UpdateTestSuite) TestUpdateLength() {
 	}
 	stor := newFakeStorage(ns)
 
-	err := executeUpdate(stor, "myns", "github", AccountOptions{Length: 8}, []string{"length"})
+	err := executeUpdate(stor, "myns", "github", AccountOptions{Length: 8}, []string{"length"}, false, false)
 
 	suite.Require().NoError(err)
 
@@ -54,7 +54,7 @@ func (suite *UpdateTestSuite) TestUpdatePrefix() {
 	}
 	stor := newFakeStorage(ns)
 
-	err := executeUpdate(stor, "myns", "github", AccountOptions{Prefix: "GH:"}, []string{"prefix"})
+	err := executeUpdate(stor, "myns", "github", AccountOptions{Prefix: "GH:"}, []string{"prefix"}, false, false)
 
 	suite.Require().NoError(err)
 
@@ -69,7 +69,7 @@ func (suite *UpdateTestSuite) TestUpdateTimePeriod() {
 	}
 	stor := newFakeStorage(ns)
 
-	err := executeUpdate(stor, "myns", "github", AccountOptions{TimePeriod: 60}, []string{"time-period"})
+	err := executeUpdate(stor, "myns", "github", AccountOptions{TimePeriod: 60}, []string{"time-period"}, false, false)
 
 	suite.Require().NoError(err)
 
@@ -84,7 +84,7 @@ func (suite *UpdateTestSuite) TestUpdateOnlyFlaggedFields() {
 	}
 	stor := newFakeStorage(ns)
 
-	err := executeUpdate(stor, "myns", "github", AccountOptions{Algorithm: "sha256", Length: 8}, []string{"algorithm"})
+	err := executeUpdate(stor, "myns", "github", AccountOptions{Algorithm: "sha256", Length: 8}, []string{"algorithm"}, false, false)
 
 	suite.Require().NoError(err)
 
@@ -96,7 +96,7 @@ func (suite *UpdateTestSuite) TestUpdateOnlyFlaggedFields() {
 func (suite *UpdateTestSuite) TestUpdateNamespaceNotFound() {
 	stor := newFakeStorage()
 
-	err := executeUpdate(stor, "missing", "github", AccountOptions{}, []string{})
+	err := executeUpdate(stor, "missing", "github", AccountOptions{}, []string{}, false, false)
 
 	suite.Require().Error(err)
 }
@@ -105,7 +105,7 @@ func (suite *UpdateTestSuite) TestUpdateAccountNotFound() {
 	ns := &storage.Namespace{Name: "myns"}
 	stor := newFakeStorage(ns)
 
-	err := executeUpdate(stor, "myns", "missing", AccountOptions{}, []string{})
+	err := executeUpdate(stor, "myns", "missing", AccountOptions{}, []string{}, false, false)
 
 	suite.Require().Error(err)
 }
@@ -118,7 +118,38 @@ func (suite *UpdateTestSuite) TestUpdateSaveError() {
 	stor := newFakeStorage(ns)
 	stor.SaveErr = errors.New("disk full")
 
-	err := executeUpdate(stor, "myns", "github", AccountOptions{}, []string{})
+	err := executeUpdate(stor, "myns", "github", AccountOptions{}, []string{}, false, false)
 
 	suite.Require().Error(err)
+}
+
+func (suite *UpdateTestSuite) TestUpdateSetFavorite() {
+	ns := &storage.Namespace{
+		Name:     "myns",
+		Accounts: []*storage.Account{{Name: "github", Token: "TOKEN"}},
+	}
+	stor := newFakeStorage(ns)
+
+	err := executeUpdate(stor, "myns", "github", AccountOptions{}, []string{}, true, false)
+
+	suite.Require().NoError(err)
+	suite.True(stor.SaveCalled)
+
+	acc, _ := ns.FindAccount("github")
+	suite.True(acc.Favorite)
+}
+
+func (suite *UpdateTestSuite) TestUpdateUnsetFavorite() {
+	ns := &storage.Namespace{
+		Name:     "myns",
+		Accounts: []*storage.Account{{Name: "github", Token: "TOKEN", Favorite: true}},
+	}
+	stor := newFakeStorage(ns)
+
+	err := executeUpdate(stor, "myns", "github", AccountOptions{}, []string{}, false, true)
+
+	suite.Require().NoError(err)
+
+	acc, _ := ns.FindAccount("github")
+	suite.False(acc.Favorite)
 }

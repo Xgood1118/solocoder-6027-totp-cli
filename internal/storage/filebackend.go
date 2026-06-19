@@ -212,6 +212,57 @@ func (s *FileBackend) Save() error {
 	return nil
 }
 
+// Backup creates an age-encrypted backup file of all namespaces and accounts.
+func (s *FileBackend) Backup(outputPath string) error {
+	outFile, err := os.Create(outputPath)
+	if err != nil {
+		return BackendError{Message: err.Error()}
+	}
+
+	defer outFile.Close()
+
+	err = outFile.Chmod(storageFilePermissions)
+	if err != nil {
+		return BackendError{Message: err.Error()}
+	}
+
+	recipient, err := age.NewScryptRecipient(s.password)
+	if err != nil {
+		return BackendError{Message: err.Error()}
+	}
+
+	recipient.SetWorkFactor(scryptWorkFactor)
+
+	armorFile := armor.NewWriter(outFile)
+
+	cryptFile, err := age.Encrypt(armorFile, recipient)
+	if err != nil {
+		return BackendError{Message: err.Error()}
+	}
+
+	err = json.NewEncoder(cryptFile).Encode(s.namespaces)
+	if err != nil {
+		return BackendError{Message: err.Error()}
+	}
+
+	err = cryptFile.Close()
+	if err != nil {
+		return BackendError{Message: err.Error()}
+	}
+
+	err = armorFile.Close()
+	if err != nil {
+		return BackendError{Message: err.Error()}
+	}
+
+	err = outFile.Sync()
+	if err != nil {
+		return BackendError{Message: err.Error()}
+	}
+
+	return nil
+}
+
 // acquirePassword asks the passwordProvider for a password using the given prompt.
 func (s *FileBackend) acquirePassword(prompt string) (string, error) {
 	if s.passwordProvider == nil {

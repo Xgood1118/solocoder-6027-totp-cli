@@ -60,3 +60,7 @@ func (f *fakeStorage) DeleteNamespace(ns *storage.Namespace) {
 		}
 	}
 }
+
+func (f *fakeStorage) Backup(_ string) error {
+	return nil
+}

@@ -18,17 +18,20 @@ func GenerateCommand() *cli.Command {
 		Flags: []cli.Flag{
 			flagFollow(),
 			flagShowRemaining(),
+			flagFavorite(),
 		},
 		Usage:     "Generate a specific OTP",
-		ArgsUsage: "<namespace> <account>",
+		ArgsUsage: "<namespace> [account]",
 		Action: func(ctx *cli.Context) error {
 			namespaceName := ctx.Args().Get(argSetPrefixPositionNamespace)
 			if len(namespaceName) < 1 {
 				return CommandError{Message: errMsgNamespaceNotDefined}
 			}
 
+			useFavorite := ctx.Bool("favorite")
 			accountName := ctx.Args().Get(argSetPrefixPositionAccount)
-			if len(accountName) < 1 {
+
+			if !useFavorite && len(accountName) < 1 {
 				return CommandError{Message: "account is not defined"}
 			}
 
@@ -38,6 +41,10 @@ func GenerateCommand() *cli.Command {
 			err := storage.Prepare()
 			if err != nil {
 				return err
+			}
+
+			if useFavorite {
+				return executeGenerateFavorite(storage, namespaceName, ctx.Bool("show-remaining"))
 			}
 
 			return executeGenerate(storage, namespaceName, accountName, ctx.Bool("follow"), ctx.Bool("show-remaining"))
@@ -77,6 +84,35 @@ func executeGenerate(storage s.Storage, nsName, accName string, follow, showRema
 
 		time.Sleep(time.Second)
 	}
+}
+
+func executeGenerateFavorite(storage s.Storage, nsName string, showRemaining bool) error {
+	namespace, err := storage.FindNamespace(nsName)
+	if err != nil {
+		return err
+	}
+
+	var favoriteAccounts []*s.Account
+	for _, account := range namespace.Accounts {
+		if account.Favorite {
+			favoriteAccounts = append(favoriteAccounts, account)
+		}
+	}
+
+	if len(favoriteAccounts) == 0 {
+		return CommandError{Message: "no favorite accounts found in namespace: " + nsName}
+	}
+
+	for _, account := range favoriteAccounts {
+		code, remaining, err := generateCode(account)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%s: %s\n", account.Name, formatCode(code, remaining, showRemaining))
+	}
+
+	return nil
 }
 
 func getAccount(storage s.Storage, namespaceName, accountName string) (*s.Account, error) {

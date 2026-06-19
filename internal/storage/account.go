@@ -12,4 +12,5 @@ type Account struct {
 	Algorithm  string `json:"algorithm"  yaml:"algorithm"`
 	Length     uint   `json:"length"     yaml:"length"`
 	TimePeriod int64  `json:"timePeriod" yaml:"timePeriod"`
+	Favorite   bool   `json:"favorite"   yaml:"favorite"`
 }

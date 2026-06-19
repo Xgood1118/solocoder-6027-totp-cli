@@ -20,6 +20,8 @@ func UpdateCommand() *cli.Command {
 			flagPrefix(),
 			flagAlgorithm(),
 			flagTimePeriod(),
+			flagFavorite(),
+			flagNoFavorite(),
 		},
 		ArgsUsage: "[namespace] [account]",
 		Action: func(ctx *cli.Context) error {
@@ -59,12 +61,27 @@ func UpdateCommand() *cli.Command {
 				opts.Prefix = ctx.String("prefix")
 			}
 
-			return executeUpdate(storage, namespaceName, accountName, opts, ctx.LocalFlagNames())
+			setFavorite := false
+			unsetFavorite := false
+
+			if slices.Contains(ctx.LocalFlagNames(), "favorite") {
+				setFavorite = ctx.Bool("favorite")
+			}
+
+			if slices.Contains(ctx.LocalFlagNames(), "no-favorite") {
+				unsetFavorite = ctx.Bool("no-favorite")
+			}
+
+			if setFavorite && unsetFavorite {
+				return CommandError{Message: "--favorite and --no-favorite cannot be used together"}
+			}
+
+			return executeUpdate(storage, namespaceName, accountName, opts, ctx.LocalFlagNames(), setFavorite, unsetFavorite)
 		},
 	}
 }
 
-func executeUpdate(storage s.Storage, nsName, accName string, opts AccountOptions, setFlags []string) error {
+func executeUpdate(storage s.Storage, nsName, accName string, opts AccountOptions, setFlags []string, setFavorite, unsetFavorite bool) error {
 	account, err := getAccount(storage, nsName, accName)
 	if err != nil {
 		return err
@@ -84,6 +101,14 @@ func executeUpdate(storage s.Storage, nsName, accName string, opts AccountOption
 
 	if slices.Contains(setFlags, "prefix") {
 		account.Prefix = opts.Prefix
+	}
+
+	if setFavorite {
+		account.Favorite = true
+	}
+
+	if unsetFavorite {
+		account.Favorite = false
 	}
 
 	err = storage.Save()

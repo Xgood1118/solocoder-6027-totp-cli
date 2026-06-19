@@ -1,0 +1,8 @@
+{
+  "verdict": "不满意",
+  "round": 1,
+  "bugs": [
+    "dump backup 子命令因 flag 同名冲突完全不可用：内部/cmd/dump.go 备份子命令（backupSubcommand）的 --output 与父命令 DumpCommand 的 --output 同名，父命令标记了 Required: true，urfave/cli v2.27.7 拦截后导致子命令永远收不到 --output 参数值，执行 totp-cli dump backup --output /path 始终报 Required flag \"output\" not set，age 加密备份功能整条路径走不通。"
+  ],
+  "commit_sha": "89b202e69f6779f47f6bed5e8ac44e4664f58fd2"
+}

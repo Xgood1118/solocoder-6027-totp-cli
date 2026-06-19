@@ -91,3 +91,34 @@ func flagTimePeriod() *cli.Int64Flag {
 		Usage: "Time period in seconds.",
 	}
 }
+
+func flagSearch() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:  "search",
+		Usage: "Search query for account names.",
+	}
+}
+
+func flagRegex() *cli.BoolFlag {
+	return &cli.BoolFlag{
+		Name:  "regex",
+		Value: false,
+		Usage: "Use regex matching for search.",
+	}
+}
+
+func flagFavorite() *cli.BoolFlag {
+	return &cli.BoolFlag{
+		Name:  "favorite",
+		Value: false,
+		Usage: "Mark account as favorite, or generate all favorite accounts.",
+	}
+}
+
+func flagNoFavorite() *cli.BoolFlag {
+	return &cli.BoolFlag{
+		Name:  "no-favorite",
+		Value: false,
+		Usage: "Remove favorite mark from account.",
+	}
+}

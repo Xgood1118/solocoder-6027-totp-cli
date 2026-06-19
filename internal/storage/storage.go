@@ -12,4 +12,5 @@ type Storage interface {
 	ListNamespaces() []*Namespace
 
 	Save() error
+	Backup(outputPath string) error
 }
