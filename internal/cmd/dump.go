@@ -21,11 +21,16 @@ func DumpCommand() *cli.Command {
 		ArgsUsage: " ",
 		Flags: []cli.Flag{
 			flagYesPlease(warningMsg),
-			flagOutput(),
+			flagOutputOptional(),
 		},
 		Action: func(ctx *cli.Context) error {
 			if !ctx.Bool("yes-please") {
 				return CommandError{Message: warningMsg}
+			}
+
+			outputPath := ctx.String("output")
+			if len(outputPath) < 1 {
+				return CommandError{Message: `Required flag "output" not set`}
 			}
 
 			term := terminal.New(os.Stdin, os.Stdout, os.Stderr)
@@ -36,7 +41,7 @@ func DumpCommand() *cli.Command {
 				return err
 			}
 
-			return executeDump(storage, ctx.String("output"))
+			return executeDump(storage, outputPath)
 		},
 		Subcommands: []*cli.Command{
 			backupSubcommand(),

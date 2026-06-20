@@ -122,3 +122,10 @@ func flagNoFavorite() *cli.BoolFlag {
 		Usage: "Remove favorite mark from account.",
 	}
 }
+
+func flagOutputOptional() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:  "output",
+		Usage: "Output file.",
+	}
+}
